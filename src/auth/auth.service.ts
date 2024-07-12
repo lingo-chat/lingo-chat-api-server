@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService as Jwt } from '@nestjs/jwt';
-import { ConfigService, ConfigType } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import { vaultClient } from 'src/global/configs/vault.configuration';
 import { OAuth2Client } from 'google-auth-library';
 import { UsersService } from 'src/users/users.service';
@@ -54,12 +54,14 @@ export class AuthService {
 		}
 	}
 
-	async googleOAuthLogin({ req, res }) {
+	async googleOAuthLogin({ req }) {
 		const { user } = req;
 		const { provider, provideId, name, email } = user;
 
 		const isExist = await this.usersService.isUserExist({ provide_id: provideId });
-		if (!isExist) this.usersService.createGoogleUser(user);
+		if (!isExist) await this.usersService.createGoogleUser(user);
+
+		const findUser = await this.usersService.findUser({ provide_id: provideId });
 
 		const accessToken = await this.generateAccessToken({
 			provider: provider,
@@ -72,8 +74,6 @@ export class AuthService {
 			provideId: provideId,
 			name: name,
 		});
-
-		const findUser = await this.usersService.findUser({ provide_id: provideId });
 
 		await this.userRepository.update(
 			{
@@ -89,6 +89,17 @@ export class AuthService {
 		return {
 			accessToken,
 			refreshToken,
+		};
+	}
+
+	async refresh(user: User) {
+		const payload: TokenPayload = {
+			provider: user.provider,
+			provideId: user.provide_id,
+			name: user.name,
+		};
+		return {
+			accessToken: this.generateAccessToken(payload),
 		};
 	}
 }
