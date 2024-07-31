@@ -6,6 +6,7 @@ import { validationSchema } from './global/configs/validation.schema';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { WebsocketClientModule } from './websocket-client/websocket-client.module';
 import jwtConfiguration from './global/configs/jwt.configuration';
 
 @Module({
@@ -20,6 +21,7 @@ import jwtConfiguration from './global/configs/jwt.configuration';
 		DatabaseModule,
 		UsersModule,
 		AuthModule,
+		WebsocketClientModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
