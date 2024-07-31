@@ -27,4 +27,10 @@ export const validationSchema = Joi.object({
 	// VAULT
 	VAULT_ENDPOINT: Joi.string().required(),
 	VAULT_TOKEN: Joi.string().required(),
+
+	// REACT_APP
+	REACT_APP_BASE: Joi.string().required(),
+
+	// SOCKET_SERVER
+	SOCKET_SERVER_URL: Joi.string().required(),
 });

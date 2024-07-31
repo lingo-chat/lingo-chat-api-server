@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { TransformInterceptor } from './global/interceptors/transform.interceptor';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
@@ -11,6 +13,15 @@ async function bootstrap() {
 	const reflector = new Reflector();
 
 	app.useGlobalInterceptors(new TransformInterceptor(reflector), new ClassSerializerInterceptor(reflector));
+
+	const corsOptions: CorsOptions = {
+		origin: '*',
+		methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+		credentials: true,
+	};
+	app.enableCors(corsOptions);
+
+	app.useWebSocketAdapter(new IoAdapter(app));
 
 	await app.listen(PORT);
 }
