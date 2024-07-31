@@ -9,6 +9,7 @@ import jwtConfiguration from 'src/global/configs/jwt.configuration';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -54,6 +55,17 @@ export class AuthService {
 		}
 	}
 
+	async verifyToken(token: string) {
+		const secret = this.config.access.secretKey;
+		try {
+			const decoded = jwt.verify(token, secret);
+			return decoded;
+		} catch (e) {
+			console.log(e.message);
+			throw new Error('Token verification failed');
+		}
+	}
+
 	async googleOAuthLogin({ req }) {
 		const { user } = req;
 		const { provider, provideId, name, email } = user;
@@ -86,7 +98,10 @@ export class AuthService {
 			},
 		);
 
+		const userName = findUser.name;
+
 		return {
+			userName,
 			accessToken,
 			refreshToken,
 		};
