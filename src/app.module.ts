@@ -7,6 +7,8 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { WebsocketClientModule } from './websocket-client/websocket-client.module';
+import { PersonaModule } from './persona/persona.module';
+import { ChatsModule } from './chats/chats.module';
 import jwtConfiguration from './global/configs/jwt.configuration';
 
 @Module({
@@ -22,6 +24,8 @@ import jwtConfiguration from './global/configs/jwt.configuration';
 		UsersModule,
 		AuthModule,
 		WebsocketClientModule,
+		PersonaModule,
+		ChatsModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
