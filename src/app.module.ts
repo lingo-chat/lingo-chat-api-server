@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { WebsocketClientModule } from './websocket-client/websocket-client.module';
 import { PersonaModule } from './persona/persona.module';
 import { ChatsModule } from './chats/chats.module';
+import { RedisModule } from './redis/redis.module';
 import jwtConfiguration from './global/configs/jwt.configuration';
 
 @Module({
@@ -26,6 +27,7 @@ import jwtConfiguration from './global/configs/jwt.configuration';
 		WebsocketClientModule,
 		PersonaModule,
 		ChatsModule,
+		RedisModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

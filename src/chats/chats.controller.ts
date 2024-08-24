@@ -16,9 +16,8 @@ export class ChatsController {
 
 	@Post('receive-message')
 	@ResponseMessage(ChatResponseMessage.CREATE_CHATROOM)
-	async receiveMessage(@Body() body: { providerId: string; socketId: string; message: string; personaId: number }) {
-		console.log('Received message from user:', body.providerId, body.message);
-		return await this.chatsService.processChatMessage(body.providerId, body.message, body.personaId);
+	async receiveMessage(@Body() body: { userId: string; socketId: string; message: string; personaId: number }) {
+		return await this.chatsService.processFistChatMessage(body.userId, body.message, body.personaId);
 	}
 
 	@Get('chat-rooms')

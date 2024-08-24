@@ -41,8 +41,11 @@ export class WebsocketClientGateway implements OnGatewayConnection, OnGatewayDis
 		console.log('API server disconnected from socket server');
 	}
 
-	@SubscribeMessage('message')
-	handleMessage(client: any, payload: any): string {
-		return 'Hello world!';
+	sendMessageToSocketServer(event: string, data: any) {
+		this.socket.emit(event, data);
+	}
+
+	sendNewChatRoom(event: string, data: any) {
+		this.socket.emit(event, data);
 	}
 }
