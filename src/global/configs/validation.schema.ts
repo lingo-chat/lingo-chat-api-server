@@ -13,6 +13,11 @@ export const validationSchema = Joi.object({
 	POSTGRESQL_SYNCHRONIZE: Joi.boolean().required(),
 	POSTGRESQL_LOGGING: Joi.boolean().required(),
 
+	// REDIS
+	REDIS_HOST: Joi.string().required(),
+	REDIS_PORT: Joi.number().required(),
+	REDIS_DB: Joi.number().required(),
+
 	// GOOGLE OAUTH
 	OAUTH_GOOGLE_CLIENT_ID: Joi.string().required(),
 	OAUTH_GOOGLE_SECRET: Joi.string().required(),
