@@ -8,7 +8,7 @@ export class ModelAnswer extends BaseEntity {
 	answer: string;
 
 	@Column()
-	response_time: number;
+	response_time: string;
 
 	@ManyToOne(() => ChatLog)
 	@JoinColumn({ name: 'chat_log_id' })
