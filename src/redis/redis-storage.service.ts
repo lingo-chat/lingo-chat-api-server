@@ -20,4 +20,8 @@ export class RedisStorageService {
 	async queue(key: string, value: string) {
 		return await this.redisClient.rpush(key, value);
 	}
+
+	async getList(key: string) {
+		return await this.redisClient.lrange(key, 0, -1);
+	}
 }
