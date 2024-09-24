@@ -7,11 +7,11 @@ import { PersonaService } from 'src/persona/persona.service';
 import { UsersService } from 'src/users/users.service';
 import { personaList } from 'src/persona/entities/personaList.entity';
 import { User } from 'src/users/entities/user.entity';
-import { RedisStorageService } from 'src/redis/redis-storage.service';
 import { SaveRedisLogsDto } from './dtos/save-redis-logs.dto';
 import { ChatLog } from './entities/chatLog.entity';
 import { ModelAnswer } from './entities/modelAnswer.entity';
 import { ChatsExeption } from './classes/chats.exception.message';
+import { RedisCacheService } from 'src/redis/redis-cache.service';
 
 @Injectable()
 export class ChatsService {
@@ -25,7 +25,7 @@ export class ChatsService {
 		private readonly chatLogRepository: Repository<ChatLog>,
 		@InjectRepository(ModelAnswer)
 		private readonly modelAnswerRepository: Repository<ModelAnswer>,
-		private readonly redisStorageService: RedisStorageService,
+		private readonly redisCacheService: RedisCacheService,
 		private readonly dataSource: DataSource,
 	) {}
 
@@ -48,7 +48,7 @@ export class ChatsService {
 			user_message: message,
 		});
 
-		await this.redisStorageService.queue('user_ms_queue', str);
+		await this.redisCacheService.pushQueue('user_ms_queue', str);
 
 		return {
 			chatRoomId: chatRoom.id,
@@ -94,7 +94,7 @@ export class ChatsService {
 	}
 
 	async getRedisLogs(chatRoomId: string) {
-		const chatLogs = await this.redisStorageService.getList(chatRoomId);
+		const chatLogs = await this.redisCacheService.getList(chatRoomId);
 		console.log(chatLogs);
 		return chatLogs;
 	}
