@@ -1,0 +1,12 @@
+services:
+    api-blue.amd64:
+        container_name: lingochat-api-blue.amd64
+        build:
+            context: .
+            dockerfile: DockerFile
+        volumes:
+            - ./src:/api/src
+        restart: always
+        ports:
+            - ${SERVER_PORT}:${SERVER_PORT}
+        platform: linux/amd64
