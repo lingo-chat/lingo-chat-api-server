@@ -19,7 +19,7 @@ jobs:
             - name: Set up Node.js
               uses: actions/setup-node@v2
               with:
-                  node-version: '18' # Node.js 버전 설정
+                  node-version: '18'
 
             - name: Create .blue.env file
               run: |
