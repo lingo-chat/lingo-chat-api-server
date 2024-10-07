@@ -71,7 +71,7 @@ jobs:
                   docker-compose --env-file .blue.env -f docker-compose.blue.amd64.yaml build
                   docker tag lingo-chat-api-server-api-blue.amd64 haeseung/lingo-api-server-blue.amd64
 
-            - name: SSH into Server & Deploy image
+            - name: SSH into Server & Deploy
               uses: appleboy/ssh-action@master
               with:
                   host: ${{ secrets.REMOTE_SSH_HOST }}
