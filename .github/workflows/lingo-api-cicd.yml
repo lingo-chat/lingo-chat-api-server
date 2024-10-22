@@ -19,7 +19,7 @@ jobs:
             - name: Set up Node.js
               uses: actions/setup-node@v2
               with:
-                  node-version: '18' # Node.js 버전 설정
+                  node-version: '18'
 
             - name: Create .blue.env file
               run: |
@@ -65,6 +65,11 @@ jobs:
                   JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY}}
                   JWT_REFRESH_EXPIRATION_TIME: ${{ secrets.JWT_REFRESH_EXPIRATION_TIME}}
 
+            - name: Install Docker Compose
+              run: |
+                  sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                  sudo chmod +x /usr/local/bin/docker-compose
+
             - name: Docker build & push
               run: |
                   docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -81,4 +86,79 @@ jobs:
                       docker pull haeseung/lingo-api-server-blue.amd64
                       docker run --name api-blue -d -p 3000:3000 --env-file /home/ubuntu/.blue.env haeseung/lingo-api-server-blue.amd64
 
-    # deploy-green:
+    deploy-green:
+        if: startsWith(github.ref, 'refs/tags/green')
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: '18'
+
+            - name: Create .green.env file
+              run: |
+                  echo "SERVER_PORT=$SERVER_PORT" >> .green.env
+                  echo "POSTGRESQL_USER=$POSTGRESQL_USER" >> .green.env
+                  echo "POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD" >> .green.env
+                  echo "POSTGRESQL_HOST=$POSTGRESQL_HOST" >> .green.env
+                  echo "POSTGRESQL_PORT=$POSTGRESQL_PORT" >> .green.env
+                  echo "POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE" >> .green.env
+                  echo "POSTGRESQL_SYNCHRONIZE=$POSTGRESQL_SYNCHRONIZE" >> .green.env
+                  echo "POSTGRESQL_LOGGING=$POSTGRESQL_LOGGING" >> .green.env
+                  echo "REDIS_CACHE_HOST=$REDIS_CACHE_HOST" >> .green.env
+                  echo "REDIS_CACHE_PORT=$REDIS_CACHE_PORT" >> .green.env
+                  echo "REDIS_CACHE_DB=$REDIS_CACHE_DB" >> .green.env
+                  echo "OAUTH_GOOGLE_CLIENT_ID=$OAUTH_GOOGLE_CLIENT_ID" >> .green.env
+                  echo "OAUTH_GOOGLE_SECRET=$OAUTH_GOOGLE_SECRET" >> .green.env
+                  echo "OAUTH_GOOGLE_REDIRECT=$OAUTH_GOOGLE_REDIRECT" >> .green.env
+                  echo "REACT_APP_BASE=$REACT_APP_BASE" >> .green.env
+                  echo "SOCKET_SERVER_URL=$SOCKET_SERVER_URL" >> .green.env
+                  echo "JWT_ACCESS_SECRET_KEY=$JWT_ACCESS_SECRET_KEY" >> .green.env
+                  echo "JWT_ACCESS_EXPIRATION_TIME=$JWT_ACCESS_EXPIRATION_TIME" >> .green.env
+                  echo "JWT_REFRESH_SECRET_KEY=$JWT_REFRESH_SECRET_KEY" >> .green.env
+                  echo "JWT_REFRESH_EXPIRATION_TIME=$JWT_REFRESH_EXPIRATION_TIME" >> .green.env
+              env:
+                  SERVER_PORT: 3001
+                  POSTGRESQL_USER: ${{ secrets.POSTGRESQL_USER}}
+                  POSTGRESQL_PASSWORD: ${{ secrets.POSTGRESQL_PASSWORD}}
+                  POSTGRESQL_HOST: ${{ secrets.POSTGRESQL_HOST}}
+                  POSTGRESQL_PORT: ${{ secrets.POSTGRESQL_PORT}}
+                  POSTGRESQL_DATABASE: ${{ secrets.POSTGRESQL_DATABASE}}
+                  POSTGRESQL_SYNCHRONIZE: ${{ secrets.POSTGRESQL_SYNCHRONIZE}}
+                  POSTGRESQL_LOGGING: ${{ secrets.POSTGRESQL_LOGGING}}
+                  REDIS_CACHE_HOST: ${{ secrets.REDIS_CACHE_HOST}}
+                  REDIS_CACHE_PORT: ${{ secrets.REDIS_CACHE_PORT}}
+                  REDIS_CACHE_DB: ${{ secrets.REDIS_CACHE_DB}}
+                  OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID}}
+                  OAUTH_GOOGLE_SECRET: ${{ secrets.OAUTH_GOOGLE_SECRET}}
+                  OAUTH_GOOGLE_REDIRECT: ${{ secrets.OAUTH_GOOGLE_REDIRECT}}
+                  REACT_APP_BASE: ${{ secrets.REACT_APP_BASE}}
+                  SOCKET_SERVER_URL: ${{ secrets.SOCKET_SERVER_URL}}
+                  JWT_ACCESS_SECRET_KEY: ${{ secrets.JWT_ACCESS_SECRET_KEY}}
+                  JWT_ACCESS_EXPIRATION_TIME: ${{ secrets.JWT_ACCESS_EXPIRATION_TIME}}
+                  JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY}}
+                  JWT_REFRESH_EXPIRATION_TIME: ${{ secrets.JWT_REFRESH_EXPIRATION_TIME}}
+
+            - name: Install Docker Compose
+              run: |
+                  sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                  sudo chmod +x /usr/local/bin/docker-compose
+
+            - name: Docker build & push
+              run: |
+                  docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+                  docker-compose --env-file .green.env -f docker-compose.green.amd64.yaml build
+                  docker tag lingo-chat-api-server-api-green.amd64 haeseung/lingo-api-server-green.amd64
+
+            - name: SSH into Server & Deploy
+              uses: appleboy/ssh-action@master
+              with:
+                  host: ${{ secrets.REMOTE_SSH_HOST }}
+                  username: ${{ secrets.REMOTE_SSH_USERNAME }}
+                  key: ${{ secrets.REMOTE_SSH_KEY }}
+                  script: |
+                      docker pull haeseung/lingo-api-server-green.amd64
+                      docker run --name api-green -d -p 3001:3001 --env-file /home/ubuntu/.green.env haeseung/lingo-api-server-green.amd64
