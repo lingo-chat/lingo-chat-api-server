@@ -6,14 +6,6 @@
 -   서버의 부하를 줄이고 실시간 처리 성능을 최적화하기 위해 Socket Server와 API Server를 분리하여 개발되었습니다.
 -   안정적인 서비스 운영을 위해 Blue-Green 배포 방식을 적용한 인프라를 설계하였습니다. 이를 위해 Docker 기반의 인프라를 사용하여 높은 가용성과 무중단 배포를 보장할 수 있도록 했습니다.
 
-### 진행 중인 작업 / 예정 작업
-
-Kubernetes 클러스터로의 마이그레이션은 현재의 아키텍처보다 애플리케이션의 확장성, 고가용성을 향상시켜 고도화하고
-배포 속도와 자동화를 그에 맞게 개선하여 개발 및 운영 효율성을 극대화하기 위해 CI/CD 파이프라인 최적화 작업을 진행하고 있습니다.
-
--   **Kubernetes 클러스터로 마이그레이션** 진행 중
--   Github Actions CI, Helm Chart를 활용한 Argo CD 구축 예정
-
 <br>
 
 ## 프로젝트 사용기술
@@ -100,8 +92,10 @@ GitHub에 소스 코드 변경사항이 푸시되면 CI 파이프라인의 트�
 
 ## 프로젝트 Repository
 
-[FrontEnd] https://github.com/lingo-chat/lingo-chat
+**[FrontEnd]** https://github.com/lingo-chat/lingo-chat
 
-[Socket-Server] https://github.com/haeseung123/lingo-chat-socket-server
+**[Socket-Server]** https://github.com/haeseung123/lingo-chat-socket-server
 
-[Helm Chart] https://github.com/haeseung123/lingo-chat-helm
+**[Helm Chart]** https://github.com/haeseung123/lingo-chat-helm
+
+-   쿠버네티스 클러스터로의 마이그레이션 작업을 진행중에 있습니다. 링고 헬름 차트는 이 작업에 대한 리소스 입니다.
