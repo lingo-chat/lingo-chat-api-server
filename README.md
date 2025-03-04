@@ -4,7 +4,6 @@
 
 -   페르소나 캐릭터와 AI 채팅 기능을 제공하는 프로젝트 입니다.
 -   서버의 부하를 줄이고 실시간 처리 성능을 최적화하기 위해 Socket Server와 API Server를 분리하여 개발되었습니다.
--   안정적인 서비스 운영을 위해 Blue-Green 배포 방식을 적용한 인프라를 설계하였습니다. 이를 위해 Docker 기반의 인프라를 사용하여 높은 가용성과 무중단 배포를 보장할 수 있도록 했습니다.
 
 <br>
 
@@ -12,29 +11,56 @@
 
 **[BackEnd]** Nest.JS, Typescript, PostgreSQL, TypeORM, Redis, socket.io
 
-**[DevOps]** GCP, Nginx, Docker, Docker compose, Ubuntu, Git, Github Actions
+**[DevOps]** GCP, GKE, Nginx, Docker, Docker compose, Kubernetes, Ubuntu, Git, Github Actions, Vault
 
 <br>
 
 ## 프로젝트 아키텍처
 
-<img width="917" alt="스크린샷 2024-11-05 오후 6 18 14" src="https://github.com/user-attachments/assets/3a0fb7d7-8e40-4e33-99b1-8591feec7273">
+프로젝트의 초기 인프라는 개발과 운영 환경의 일관성을 유지하고 컨테이너화된 애플리케이션을 손쉽게 배포하고 관리할 수 있도록 도커 기반의 인프라로 구축되었습니다. 단순히 컨테이너를 운영하는 것이 아닌 무중단 배포와 운영 자동화까지, 최선의 방안을 적용할 수 있도록 고려하였습니다.
 
-### CI/CD Workflow
+-   Blue-Green 배포 방식을 도입하여 배포 중 발생할 수 있는 장애를 최소화하고 실시간 트래픽 전환을 통해 서비스 다운타임 없이 안전하게 배포
+-   GitHub Actions를 활용한 CI/CD 파이프라인을 구축하여 코드 변경 사항이 자동으로 빌드-배포되도록 구성하여 배포 속도를 높이고 운영 부담 최소화
 
-```
-1. 소스 코드 변경사항 Push
-GitHub에 소스 코드 변경사항이 푸시되면 CI 파이프라인의 트리거가 되어 GitHub Actions 워크플로우 실행
+도커 기반의 아키텍처에서 적용할 수 있는 최선의 배포 및 운영 전략을 고려하여 적용했지만 서비스 확장성와 운영 자동화의 필요성이 커지면서 쿠버네티스 기반으로 전환하게 되었습니다.
 
-2. GitHub Actions CI 파이프라인 동작
-- Docker Image Build: GitHub Actions에서 Docker 이미지 빌드
-- Docker Registry Push: 빌드된 Docker 이미지를 Docker 레지스트리에 푸시
-- Nginx Load Balancer Update: Nginx 설정을 자동으로 업데이트하여 새로운 Docker 이미지를 사용할 수 있도록 함
+### 전환된 인프라 아키텍처
 
-3. Nginx Load Balancer를 통한 배포
-- api-deploy.sh: 배포 스크립트를 통해 Blue/Green 배포 전략을 적용하여 무중단 배포를 처리
-- 신규 버전 배포 → Nginx 설정 업데이트 → 구 버전 종료
-```
+<img width="782" alt="스크린샷 2025-03-04 오후 2 56 12" src="https://github.com/user-attachments/assets/0185c63f-a993-4a8d-af21-b37f27e430db" />
+
+현재는 GCP의 GKE(Google Kubernetes Engine) 기반의 아키텍처로 전환하여 컨테이너 오케스트레이션과 서비스 확장성을 보장하도록 개선하였습니다.
+
+-   기존 인프라에서는 장애 발생 시 복구를 수동으로 해야 했으나 쿠버네티스의 자동 복구(Self-Healing) 기능으로 비정상적인 컨테이너를 자동으로 감지하고 재시작할 수 있도록 개선
+-   초기에는 컨테이너 개수를 수동으로 조정해야하는 한계가 있었으나 트래픽 변화에 따라 노드와 파드를 자동으로 조절할 수 있도록 고려
+-   Helm 차트를 작성하여 애플리케이션 배포 및 구성을 템플릿화함으로써 버전 관리가 용이해지고 배포를 일관성 있게 수행
+-   쿠버네티스의 서비스(Service)와 인그레스(Ingress) 기능을 활용하여 별도의 도구 없이 컨테이너 간 통신을 쉽게 설정
+
+#### 진행 중인 사항
+
+쿠버네티스 환경에 최적화된 CI/CD 워크플로우를 구성하고 있습니다.
+
+-   Github Actions 및 ArgoCD를 활용한 GitOps 기반 배포 방식 도입
+
+<br>
+
+## 기술적 이슈와 해결 과정
+
+-   확장성 높은 아키텍처로 전환하는 과정
+
+    -   [Github Actions를 이용하여 CI/CD 구축하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%975-Github-Action%EC%9D%84-%EC%9D%B4%EC%9A%A9%ED%95%98%EC%97%AC-CICD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
+    -   [FrontEnd 배포 성능을 최적화하는 방법](https://velog.io/@showui96/Frontend-%EB%B0%B0%ED%8F%AC-%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%ED%95%98%EA%B8%B0)
+    -   [GKE 기반 쿠버네티스 아키텍처로 전환](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-7-%ED%99%95%EC%9E%A5%EC%84%B1-%EB%86%92%EC%9D%80-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%EB%A1%9C-%EC%A0%84%ED%99%98%ED%95%98%EA%B8%B0)
+    -   [링고챗 Helm Chart 구축 및 분석](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-8-LingoChat-Helm-Chart-%EA%B5%AC%EC%B6%95)
+
+-   코드 유지보수성과 데이터 정합성을 고려한 문제 해결
+
+    -   [반복되는 응답처리를 AOP로 분리하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%971-%EB%B0%98%EB%B3%B5%EB%90%98%EB%8A%94-%EC%9D%91%EB%8B%B5%EC%B2%98%EB%A6%AC%EB%A5%BC-AOP%EB%A1%9C-%EB%B6%84%EB%A6%AC%ED%95%98%EA%B8%B0)
+    -   [JWT 인증에서의 중복 로그인 방지하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%972-JWT-%EC%9D%B8%EC%A6%9D%EC%97%90%EC%84%9C%EC%9D%98-%EC%A4%91%EB%B3%B5-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EB%B0%A9%EC%A7%80%ED%95%98%EA%B8%B0)
+
+-   핵심 기능 개발 과정에 대한 정리
+
+    -   [웹소켓으로 실시간 챗봇 구현하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%973-%EC%9B%B9%EC%86%8C%EC%BC%93%EC%9C%BC%EB%A1%9C-%EC%8B%A4%EC%8B%9C%EA%B0%84-%EC%B1%97%EB%B4%87-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0)
+    -   [채팅 로그 읽기 쓰기 전략](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%974-%EC%B1%84%ED%8C%85-%EB%A1%9C%EA%B7%B8-%EC%9D%BD%EA%B8%B0%EC%93%B0%EA%B8%B0-%EC%A0%84%EB%9E%B5)
 
 <br>
 
@@ -58,28 +84,7 @@ GitHub에 소스 코드 변경사항이 푸시되면 CI 파이프라인의 트�
     메시지 큐를 사용하여 대기열을 관리하고 메시지 과부하를 방지하도록 했습니다.
     채팅 메시지가 과도하게 몰리더라도 큐 시스템을 통해 처리 순서를 관리하며 서버 부하를 줄이고 안정적인 서비스 제공을 보장할 수 있도록 고려했습니다.
 
--   **클라우드 환경(GCP)에서 서버 인프라 배포 및 운영**
-
-    Google Cloud Platform(GCP)을 활용하여 서버 인프라를 안정적으로 운영하고 프로젝트의 확장성을 고려한 인프라 설계를 적용하고 개선해 나가고 있습니다.
-
--   **CI/CD 및 무중단 배포 (Blue-Green 배포 적용)**
-
-    GitHub Actions를 사용하여 CI/CD 파이프라인을 구축하고 자동화된 배포 시스템을 구현했습니다.
-    Blue-Green 배포 전략을 통해 배포 과정에서 서비스 중단 없이 새로운 버전의 애플리케이션을 운영할 수 있습니다.
-
 <br>
-
-## Technical Issue
-
-[반복되는 응답처리를 AOP로 분리하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%971-%EB%B0%98%EB%B3%B5%EB%90%98%EB%8A%94-%EC%9D%91%EB%8B%B5%EC%B2%98%EB%A6%AC%EB%A5%BC-AOP%EB%A1%9C-%EB%B6%84%EB%A6%AC%ED%95%98%EA%B8%B0)
-
-[JWT 인증에서의 중복 로그인 방지하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%972-JWT-%EC%9D%B8%EC%A6%9D%EC%97%90%EC%84%9C%EC%9D%98-%EC%A4%91%EB%B3%B5-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EB%B0%A9%EC%A7%80%ED%95%98%EA%B8%B0)
-
-[웹소켓으로 실시간 챗봇 구현하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%973-%EC%9B%B9%EC%86%8C%EC%BC%93%EC%9C%BC%EB%A1%9C-%EC%8B%A4%EC%8B%9C%EA%B0%84-%EC%B1%97%EB%B4%87-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0)
-
-[채팅 로그 읽기/쓰기 전략](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%974-%EC%B1%84%ED%8C%85-%EB%A1%9C%EA%B7%B8-%EC%9D%BD%EA%B8%B0%EC%93%B0%EA%B8%B0-%EC%A0%84%EB%9E%B5)
-
-[Github Actions를 이용하여 CI/CD 구축하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%975-Github-Action%EC%9D%84-%EC%9D%B4%EC%9A%A9%ED%95%98%EC%97%AC-CICD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
 
 <br>
 
@@ -97,5 +102,3 @@ GitHub에 소스 코드 변경사항이 푸시되면 CI 파이프라인의 트�
 **[Socket-Server]** https://github.com/haeseung123/lingo-chat-socket-server
 
 **[Helm Chart]** https://github.com/haeseung123/lingo-chat-helm
-
--   쿠버네티스 클러스터로의 마이그레이션 작업을 진행중에 있습니다. 링고 헬름 차트는 이 작업에 대한 리소스 입니다.
