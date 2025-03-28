@@ -12,6 +12,7 @@ async function bootstrap() {
 	const PORT = configService.getOrThrow('SERVER_PORT');
 	const reflector = new Reflector();
 
+	app.setGlobalPrefix('api');
 	app.useGlobalInterceptors(new TransformInterceptor(reflector), new ClassSerializerInterceptor(reflector));
 
 	app.useGlobalPipes(
