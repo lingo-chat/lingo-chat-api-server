@@ -117,4 +117,8 @@ export class AuthService {
 			accessToken: this.generateAccessToken(payload),
 		};
 	}
+
+	async logout(user: User) {
+		await this.userRepository.update({ id: user.id }, { refresh_token: null });
+	}
 }

@@ -9,6 +9,7 @@ import { User } from 'src/users/entities/user.entity';
 import { JwtExceptionFilter } from 'src/global/filters/jwt-exception.filter';
 import { RtGuard } from './guard/refresh.token.guard';
 import { ConfigService } from '@nestjs/config';
+import { AtGuard } from './guard/access.token.guard';
 
 @Controller('auth')
 @UseFilters(JwtExceptionFilter)
@@ -44,5 +45,12 @@ export class AuthController {
 	@Post('verify-token')
 	async verifyToekn(@Body('token') token: string) {
 		return await this.authService.verifyToken(token);
+	}
+
+	@Post('logout')
+	@UseGuards(AtGuard)
+	@ResponseMessage(AuthReponseMessage.LOG_OUT)
+	async logout(@GetUser() user: User) {
+		return await this.authService.logout(user);
 	}
 }
