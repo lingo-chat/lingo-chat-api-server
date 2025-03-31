@@ -94,5 +94,5 @@ jobs:
                   git -C helm-repo config user.email "showui96@gmail.com"
                   git -C helm-repo config user.name "haeseung123"
                   git -C helm-repo add values.yaml
-                  git -C helm-repo commit -m "Update nginx image tag to ${TAG}"
+                  git -C helm-repo commit -m "Update api image tag to ${TAG}"
                   git -C helm-repo push
