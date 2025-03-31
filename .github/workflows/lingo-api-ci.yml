@@ -1,0 +1,98 @@
+name: Deploy lingo front-end
+
+on:
+    push:
+        tags:
+            - 'v*'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest # 최신 우분투 환경에서 실행
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Create .development.env file
+              run: |
+                  echo "SERVER_PORT=$SERVER_PORT" >> .development.env
+                  echo "POSTGRESQL_USER=$POSTGRESQL_USER" >> .development.env
+                  echo "POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD" >> .development.env
+                  echo "POSTGRESQL_HOST=$POSTGRESQL_HOST" >> .development.env
+                  echo "POSTGRESQL_PORT=$POSTGRESQL_PORT" >> .development.env
+                  echo "POSTGRESQL_DATABASE=$POSTGRESQL_DATABASE" >> .development.env
+                  echo "POSTGRESQL_SYNCHRONIZE=$POSTGRESQL_SYNCHRONIZE" >> .development.env
+                  echo "POSTGRESQL_LOGGING=$POSTGRESQL_LOGGING" >> .development.env
+                  echo "REDIS_CACHE_HOST=$REDIS_CACHE_HOST" >> .development.env
+                  echo "REDIS_CACHE_PORT=$REDIS_CACHE_PORT" >> .development.env
+                  echo "REDIS_CACHE_DB=$REDIS_CACHE_DB" >> .development.env
+                  echo "OAUTH_GOOGLE_CLIENT_ID=$OAUTH_GOOGLE_CLIENT_ID" >> .development.env
+                  echo "OAUTH_GOOGLE_SECRET=$OAUTH_GOOGLE_SECRET" >> .development.env
+                  echo "OAUTH_GOOGLE_REDIRECT=$OAUTH_GOOGLE_REDIRECT" >> .development.env
+                  echo "REACT_APP_BASE=$REACT_APP_BASE" >> .development.env
+                  echo "SOCKET_SERVER_URL=$SOCKET_SERVER_URL" >> .development.env
+                  echo "JWT_ACCESS_SECRET_KEY=$JWT_ACCESS_SECRET_KEY" >> .development.env
+                  echo "JWT_ACCESS_EXPIRATION_TIME=$JWT_ACCESS_EXPIRATION_TIME" >> .development.env
+                  echo "JWT_REFRESH_SECRET_KEY=$JWT_REFRESH_SECRET_KEY" >> .development.env
+                  echo "JWT_REFRESH_EXPIRATION_TIME=$JWT_REFRESH_EXPIRATION_TIME" >> .development.env
+              env:
+                  SERVER_PORT: 3000
+                  POSTGRESQL_USER: ${{ secrets.POSTGRESQL_USER}}
+                  POSTGRESQL_PASSWORD: ${{ secrets.POSTGRESQL_PASSWORD}}
+                  POSTGRESQL_HOST: ${{ secrets.POSTGRESQL_HOST}}
+                  POSTGRESQL_PORT: ${{ secrets.POSTGRESQL_PORT}}
+                  POSTGRESQL_DATABASE: ${{ secrets.POSTGRESQL_DATABASE}}
+                  POSTGRESQL_SYNCHRONIZE: ${{ secrets.POSTGRESQL_SYNCHRONIZE}}
+                  POSTGRESQL_LOGGING: ${{ secrets.POSTGRESQL_LOGGING}}
+                  REDIS_CACHE_HOST: ${{ secrets.REDIS_CACHE_HOST}}
+                  REDIS_CACHE_PORT: ${{ secrets.REDIS_CACHE_PORT}}
+                  REDIS_CACHE_DB: ${{ secrets.REDIS_CACHE_DB}}
+                  OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID}}
+                  OAUTH_GOOGLE_SECRET: ${{ secrets.OAUTH_GOOGLE_SECRET}}
+                  OAUTH_GOOGLE_REDIRECT: ${{ secrets.OAUTH_GOOGLE_REDIRECT}}
+                  REACT_APP_BASE: ${{ secrets.REACT_APP_BASE}}
+                  SOCKET_SERVER_URL: ${{ secrets.SOCKET_SERVER_URL}}
+                  JWT_ACCESS_SECRET_KEY: ${{ secrets.JWT_ACCESS_SECRET_KEY}}
+                  JWT_ACCESS_EXPIRATION_TIME: ${{ secrets.JWT_ACCESS_EXPIRATION_TIME}}
+                  JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY}}
+                  JWT_REFRESH_EXPIRATION_TIME: ${{ secrets.JWT_REFRESH_EXPIRATION_TIME}}
+
+            - name: Install Docker Compose
+              run: |
+                  sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                  sudo chmod +x /usr/local/bin/docker-compose
+
+            - name: Extract Tag Name
+              id: tag
+              run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+            - name: Docker build & push
+              run: |
+                  docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_TOKEN }}
+                  docker-compose --env-file .development.env -f docker-compose.amd64.yaml build
+                  docker tag lingo-chat-api-server-api.amd64 ${{ secrets.DOCKER_HUB_USERNAME }}/lingo-api-server.amd64:${{ env.TAG }} --push .
+
+            - name: Install yq
+              run: |
+                  curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
+                  chmod +x /usr/local/bin/yq
+
+            - name: Checkout Helm Repository
+              uses: actions/checkout@v2
+              with:
+                  repository: haeseung123/lingo-chat-helm
+                  token: ${{ secrets.GIT_TOKEN }}
+                  path: helm-repo
+
+            - name: Update Helm values.yaml with new image tag
+              run: |
+                  export TAG=${TAG}
+                  yq eval '.api.image.tag = env(TAG)' -i helm-repo/values.yaml
+
+            - name: Commit and Push updated values.yaml
+              run: |
+                  git -C helm-repo config user.email "showui96@gmail.com"
+                  git -C helm-repo config user.name "haeseung123"
+                  git -C helm-repo add values.yaml
+                  git -C helm-repo commit -m "Update nginx image tag to ${TAG}"
+                  git -C helm-repo push
