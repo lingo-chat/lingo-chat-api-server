@@ -12,7 +12,6 @@ import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
-	private vault: any;
 	private client: OAuth2Client;
 
 	constructor(
@@ -38,19 +37,6 @@ export class AuthService {
 			secret: this.config.refresh.secretKey,
 			expiresIn: `${this.config.refresh.expirationTime}s`,
 		});
-	}
-
-	async getGoogleOAuthCredentials() {
-		try {
-			const result = await this.vault.read('lingo-chat/data/google_oauth');
-
-			return {
-				clientID: result.data.OAUTH_GOOGLE_CLIENT_ID,
-				clientSecret: result.data.OAUTH_GOOGLE_SECRET,
-			};
-		} catch (e) {
-			throw new Error('Failed to retrieve Google OAuth keys from Vault');
-		}
 	}
 
 	async verifyToken(token: string) {

@@ -29,10 +29,6 @@ export const validationSchema = Joi.object({
 	JWT_REFRESH_SECRET_KEY: Joi.string().required(),
 	JWT_REFRESH_EXPIRATION_TIME: Joi.number().required(),
 
-	// VAULT
-	VAULT_ENDPOINT: Joi.string().required(),
-	VAULT_TOKEN: Joi.string().required(),
-
 	// REACT_APP
 	REACT_APP_BASE: Joi.string().required(),
 
