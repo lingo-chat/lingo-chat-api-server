@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService as Jwt } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
-import { vaultClient } from 'src/global/configs/vault.configuration';
 import { OAuth2Client } from 'google-auth-library';
 import { UsersService } from 'src/users/users.service';
 import { TokenPayload } from 'src/global/interfaces/token.payload';
@@ -24,7 +23,6 @@ export class AuthService {
 		@InjectRepository(User)
 		private readonly userRepository: Repository<User>,
 	) {
-		this.vault = vaultClient();
 		this.client = new OAuth2Client(process.env.OAUTH_GOOGLE_CLIENT_ID);
 	}
 
