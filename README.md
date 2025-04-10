@@ -32,7 +32,7 @@
 
 초기에는 Github Actions를 활용한 단순한 CI/CD 파이프라인을 운영했으나 쿠버네티스 환경에 적합한 구조로 발전시키기 위해 GitOps 방식의 파이프라인으로 전환되었습니다.
 
-Github Actions와 Argo CD를 조합하여 빌드부터 배포까지의 전 과정을 자동화하였으며 Git 리포지토리의 장태만으로 현재 클러스터의 구성을 추적하고 관리할 수 있습니다.
+Github Actions CI와 Argo CD를 조합하여 빌드부터 배포까지의 전 과정을 자동화하였으며 Git 리포지토리의 상태만으로 현재 클러스터의 구성을 추적하고 관리할 수 있습니다.
 
 ```
 1. 소스 코드 푸시 및 태깅
@@ -40,12 +40,12 @@ Github Actions와 Argo CD를 조합하여 빌드부터 배포까지의 전 과�
     - 신규 릴리스를 위한 태그(ex: v1.0.0) 생성 및 푸시
 
 2. Github Actions에서 CI 수행
-	  - Docker 이미지 빌드 및 Docker Hub 푸시
+    - Docker 이미지 빌드 및 Docker Hub 푸시
     - Helm Chart 업데이트 (nginx, api, socket 각각의 이미지 버전 변경)
 
 3. Argo CD + Argo Image Updater를 통한 CD 수행
-	  - Lingo Chat Helm Chart Repository의 변경을 감지하여 자동으로 클러스터에 배포
-    - Argo Image Updater가 이미지 태그 변경을 감지하고 Argo CD를 통해 최신 상태로 자동 업데이트
+    - Lingo Chat Helm Chart Repository의 변경을 감지하여 자동으로 클러스터에 배포
+    - Argo Image Updater가 이미지 태그 변경을 감지 -> 특정 서비스 단위로만 업데이트되도록 설정하여 불필요한 전체 재배포 방지
 ```
 
 <br>
