@@ -11,56 +11,70 @@
 
 **[BackEnd]** Nest.JS, Typescript, PostgreSQL, TypeORM, Redis, socket.io
 
-**[DevOps]** GCP, GKE, Nginx, Docker, Docker compose, Kubernetes, Ubuntu, Git, Github Actions, Vault
+**[DevOps]** GCP, GKE, Nginx, Docker, Docker compose, Kubernetes, Ubuntu, Git, Github Actions, Argo, Vault
 
 <br>
 
 ## 프로젝트 아키텍처
 
-프로젝트의 초기 인프라는 개발과 운영 환경의 일관성을 유지하고 컨테이너화된 애플리케이션을 손쉽게 배포하고 관리할 수 있도록 도커 기반의 인프라로 구축되었습니다. 단순히 컨테이너를 운영하는 것이 아닌 무중단 배포와 운영 자동화까지, 최선의 방안을 적용할 수 있도록 고려하였습니다.
-
--   Blue-Green 배포 방식을 도입하여 배포 중 발생할 수 있는 장애를 최소화하고 실시간 트래픽 전환을 통해 서비스 다운타임 없이 안전하게 배포
--   GitHub Actions를 활용한 CI/CD 파이프라인을 구축하여 코드 변경 사항이 자동으로 빌드-배포되도록 구성하여 배포 속도를 높이고 운영 부담 최소화
-
-도커 기반의 아키텍처에서 적용할 수 있는 최선의 배포 및 운영 전략을 고려하여 적용했지만 서비스 확장성와 운영 자동화의 필요성이 커지면서 쿠버네티스 기반으로 전환하게 되었습니다.
-
-### 전환된 인프라 아키텍처
-
 <img width="782" alt="스크린샷 2025-03-04 오후 2 56 12" src="https://github.com/user-attachments/assets/0185c63f-a993-4a8d-af21-b37f27e430db" />
 
-현재는 GCP의 GKE(Google Kubernetes Engine) 기반의 아키텍처로 전환하여 컨테이너 오케스트레이션과 서비스 확장성을 보장하도록 개선하였습니다.
+프로젝트 초기의 도커 기반의 단일 서버 환경에서 GCP의 GKE(Google Kubernetes Engine)를 활용한 쿠버네티스 기반 아키텍처로 전환하여 운영 효율성과 확장성을 보장하도록 개선되었습니다.
 
--   기존 인프라에서는 장애 발생 시 복구를 수동으로 해야 했으나 쿠버네티스의 자동 복구(Self-Healing) 기능으로 비정상적인 컨테이너를 자동으로 감지하고 재시작할 수 있도록 개선
--   초기에는 컨테이너 개수를 수동으로 조정해야하는 한계가 있었으나 트래픽 변화에 따라 노드와 파드를 자동으로 조절할 수 있도록 고려
--   Helm 차트를 작성하여 애플리케이션 배포 및 구성을 템플릿화함으로써 버전 관리가 용이해지고 배포를 일관성 있게 수행
--   쿠버네티스의 서비스(Service)와 인그레스(Ingress) 기능을 활용하여 별도의 도구 없이 컨테이너 간 통신을 쉽게 설정
+-   자동 복구(Self-Healing) 기능을 통해 컨테이너의 비정상 동작을 자동으로 감지하고 재시작함으로써 가용성 증가
+-   Helm Chart를 도입하여 애플리케이션 배포 및 구성을 템플릿화하고 서비스 버전 관리를 체계화하여 일관된 배포 및 롤백이 가능하도록 구성
 
-#### 진행 중인 사항
+<br>
 
-쿠버네티스 환경에 최적화된 CI/CD 워크플로우를 구성하고 있습니다.
+### CI/CD 파이프라인
 
--   Github Actions 및 ArgoCD를 활용한 GitOps 기반 배포 방식 도입
+<img width="791" alt="스크린샷 2025-04-10 오전 11 51 44" src="https://github.com/user-attachments/assets/969f9c6e-5994-461f-9811-deb89eff7afe" />
+
+초기에는 Github Actions를 활용한 단순한 CI/CD 파이프라인을 운영했으나 쿠버네티스 환경에 적합한 구조로 발전시키기 위해 GitOps 방식의 파이프라인으로 전환되었습니다.
+
+Github Actions와 Argo CD를 조합하여 빌드부터 배포까지의 전 과정을 자동화하였으며 Git 리포지토리의 장태만으로 현재 클러스터의 구성을 추적하고 관리할 수 있습니다.
+
+```
+1. 소스 코드 푸시 및 태깅
+    - Git-Flow 브랜치 전략을 바탕으로 한 버전 관리
+    - 신규 릴리스를 위한 태그(ex: v1.0.0) 생성 및 푸시
+
+2. Github Actions에서 CI 수행
+	  - Docker 이미지 빌드 및 Docker Hub 푸시
+    - Helm Chart 업데이트 (nginx, api, socket 각각의 이미지 버전 변경)
+
+3. Argo CD + Argo Image Updater를 통한 CD 수행
+	  - Lingo Chat Helm Chart Repository의 변경을 감지하여 자동으로 클러스터에 배포
+    - Argo Image Updater가 이미지 태그 변경을 감지하고 Argo CD를 통해 최신 상태로 자동 업데이트
+```
 
 <br>
 
 ## 기술적 이슈와 해결 과정
 
--   확장성 높은 아키텍처로 전환하는 과정
+### 확장성 높은 아키텍처로 전환하는 과정
 
-    -   [Github Actions를 이용하여 CI/CD 구축하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%975-Github-Action%EC%9D%84-%EC%9D%B4%EC%9A%A9%ED%95%98%EC%97%AC-CICD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
-    -   [FrontEnd 배포 성능을 최적화하는 방법](https://velog.io/@showui96/Frontend-%EB%B0%B0%ED%8F%AC-%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94-%ED%95%98%EA%B8%B0)
-    -   [GKE 기반 쿠버네티스 아키텍처로 전환](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-7-%ED%99%95%EC%9E%A5%EC%84%B1-%EB%86%92%EC%9D%80-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%EB%A1%9C-%EC%A0%84%ED%99%98%ED%95%98%EA%B8%B0)
-    -   [링고챗 Helm Chart 구축 및 분석](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-8-LingoChat-Helm-Chart-%EA%B5%AC%EC%B6%95)
+-   [GKE 기반 쿠버네티스 아키텍처로 전환](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-7-%ED%99%95%EC%9E%A5%EC%84%B1-%EB%86%92%EC%9D%80-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%EB%A1%9C-%EC%A0%84%ED%99%98%ED%95%98%EA%B8%B0)
 
--   코드 유지보수성과 데이터 정합성을 고려한 문제 해결
+    -   프로젝트 서버 구조에 대한 전반적인 설명과 기존 인프라의 한계점부터 쿠버네티스로 전환하기까지의 세부 내용이 정리되어 있습니다.
 
-    -   [반복되는 응답처리를 AOP로 분리하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%971-%EB%B0%98%EB%B3%B5%EB%90%98%EB%8A%94-%EC%9D%91%EB%8B%B5%EC%B2%98%EB%A6%AC%EB%A5%BC-AOP%EB%A1%9C-%EB%B6%84%EB%A6%AC%ED%95%98%EA%B8%B0)
-    -   [JWT 인증에서의 중복 로그인 방지하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%972-JWT-%EC%9D%B8%EC%A6%9D%EC%97%90%EC%84%9C%EC%9D%98-%EC%A4%91%EB%B3%B5-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EB%B0%A9%EC%A7%80%ED%95%98%EA%B8%B0)
+-   [링고챗 Helm Chart 구축 및 분석](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-8-LingoChat-Helm-Chart-%EA%B5%AC%EC%B6%95)
 
--   핵심 기능 개발 과정에 대한 정리
+    -   각 서비스(api, socket, nginx)는 별도의 Helm Chart로 구성되어 있으며 Helm Chart는 전용 리포지토리에서 관리되고 배포됩니다. 구조와 구성에 대한 세부 내용이 정리되어 있습니다.
 
-    -   [웹소켓으로 실시간 챗봇 구현하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%973-%EC%9B%B9%EC%86%8C%EC%BC%93%EC%9C%BC%EB%A1%9C-%EC%8B%A4%EC%8B%9C%EA%B0%84-%EC%B1%97%EB%B4%87-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0)
-    -   [채팅 로그 읽기 쓰기 전략](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%974-%EC%B1%84%ED%8C%85-%EB%A1%9C%EA%B7%B8-%EC%9D%BD%EA%B8%B0%EC%93%B0%EA%B8%B0-%EC%A0%84%EB%9E%B5)
+-   [GitOps 기반 CI/CD 구축하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%97-9-GitOps-%EA%B8%B0%EB%B0%98-CICD-%EA%B5%AC%EC%B6%95%ED%95%98%EA%B8%B0)
+    -   CI/CD 파이프라인은 Github Actions + Argo CD 조합으로 구성하였으며 전체 흐름 및 YAML 구성에 대해 구체적으로 서술되어 있습니다.
+    -   Argo CD는 GitOps 방식으로 클러스터 내 배포를 자동화하며 Argo Image Updater를 통해 서비스 이미지 변경을 자동으로 반영합니다. 실제 App 구성과 배포 자동화 흐름이 정리되어 있습니다.
+
+### 코드 유지보수성과 데이터 정합성을 고려한 문제 해결
+
+-   [반복되는 응답처리를 AOP로 분리하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%971-%EB%B0%98%EB%B3%B5%EB%90%98%EB%8A%94-%EC%9D%91%EB%8B%B5%EC%B2%98%EB%A6%AC%EB%A5%BC-AOP%EB%A1%9C-%EB%B6%84%EB%A6%AC%ED%95%98%EA%B8%B0)
+-   [JWT 인증에서의 중복 로그인 방지하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%972-JWT-%EC%9D%B8%EC%A6%9D%EC%97%90%EC%84%9C%EC%9D%98-%EC%A4%91%EB%B3%B5-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EB%B0%A9%EC%A7%80%ED%95%98%EA%B8%B0)
+
+### 핵심 기능 개발 과정에 대한 정리
+
+-   [웹소켓으로 실시간 챗봇 구현하기](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%973-%EC%9B%B9%EC%86%8C%EC%BC%93%EC%9C%BC%EB%A1%9C-%EC%8B%A4%EC%8B%9C%EA%B0%84-%EC%B1%97%EB%B4%87-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0)
+-   [채팅 로그 읽기 쓰기 전략](https://velog.io/@showui96/%EB%A7%81%EA%B3%A0%EC%B1%974-%EC%B1%84%ED%8C%85-%EB%A1%9C%EA%B7%B8-%EC%9D%BD%EA%B8%B0%EC%93%B0%EA%B8%B0-%EC%A0%84%EB%9E%B5)
 
 <br>
 
