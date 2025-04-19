@@ -28,7 +28,7 @@
 
 ### CI/CD 파이프라인
 
-<img width="791" alt="스크린샷 2025-04-10 오전 11 51 44" src="https://github.com/user-attachments/assets/969f9c6e-5994-461f-9811-deb89eff7afe" />
+<img width="604" alt="스크린샷 2025-04-19 오후 2 00 10" src="https://github.com/user-attachments/assets/12ddb47e-c03b-4a52-9293-4f8aa2960229" />
 
 초기에는 Github Actions를 활용한 단순한 CI/CD 파이프라인을 운영했으나 쿠버네티스 환경에 적합한 구조로 발전시키기 위해 GitOps 방식의 파이프라인으로 전환되었습니다.
 
